@@ -16,7 +16,7 @@ public class UserPointTable {
     private final Map<Long, UserPoint> table = new HashMap<>();
 
     public UserPoint selectById(Long id) {
-    	//user1에 대한 정보를 table db에 생성
+    	//user1에 대한 정보를 table db에 생성(최초 생성)
     	table.put(1L, UserPoint.user1());
     	
         throttle(200);
