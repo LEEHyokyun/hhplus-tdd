@@ -14,4 +14,15 @@ public class PointService {
 	public UserPoint point(long id) {
 		return userPointTable.selectById(id);
 	}
+	
+	public UserPoint charge(long id, long amount) {
+		long beforePoint = userPointTable.selectById(id).point();
+		
+		//beforePoint가 0보다 크다면 기존 유저가 존재한다는 의미
+		if(beforePoint > PointRule.NOT_EXIST_USER_POINT) {
+			amount = amount + beforePoint;
+		}
+		
+		return userPointTable.insertOrUpdate(id, amount);
+	}
 }

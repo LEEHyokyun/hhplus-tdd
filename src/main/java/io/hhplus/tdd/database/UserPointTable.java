@@ -16,15 +16,15 @@ public class UserPointTable {
     private final Map<Long, UserPoint> table = new HashMap<>();
 
     public UserPoint selectById(Long id) {
-    	this.insertUser1ToTable();
+    	//user1에 대한 정보를 table db에 생성
+    	table.put(1L, UserPoint.user1());
     	
         throttle(200);
         return table.getOrDefault(id, UserPoint.empty(id));
     }
 
     public UserPoint insertOrUpdate(long id, long amount) {
-    	this.insertUser1ToTable();
-    	
+    	//생성 혹은 수정된 유저정보가 db에 반영
         throttle(300);
         UserPoint userPoint = new UserPoint(id, amount, System.currentTimeMillis());
         table.put(id, userPoint);
@@ -39,8 +39,4 @@ public class UserPointTable {
         }
     }
     
-    private void insertUser1ToTable() {
-    	//user1에 대한 정보를 table db에 생성
-    	table.put(1L, UserPoint.user1());
-    }
 }
