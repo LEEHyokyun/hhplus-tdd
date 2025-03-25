@@ -36,3 +36,9 @@
  가-3) empty는 유저정보가 존재하지 않을 때 사용하는 dummy 정보(이때 point는 0) 및 point가 없는 사용자에 대한 정보로 간주하였습니다.
  가-4) 이외 user1(id = 1, point = 100)의 정보를 생성하기 위해 UserPoint와 UserPointTable에 생성이 필요합니다. -> unit test 대상
  가-5) 충전 및 사용하는 포인트의 유효성 검증은 UserPoint에서 진행하도록 하여 관심사를 분리하였습니다. -> unit test 대상
+ 
+ 나. Controller에서 기재한 기본적인 API에 대한 테스트를 설계합니다.
+ 나-1) 특정 유저의 포인트를 조회합니다.
+ 나-1-1) 매개변수 : id, return : UserPoint
+ 나-1-2) UserPointTable에서 조회하며, 정보가 없다면 포인트가 0인 empty 정보를 반환합니다.
+ 나-1-3) Database의 컴포넌트와 상호작용이 이루어지므로 통합테스트 범위에서 진행합니다. -> integration test 대상
