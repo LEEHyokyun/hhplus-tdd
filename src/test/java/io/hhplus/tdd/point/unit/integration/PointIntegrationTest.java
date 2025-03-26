@@ -1,19 +1,21 @@
 package io.hhplus.tdd.point.unit.integration;
 
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import io.hhplus.tdd.point.PointService;
-import io.hhplus.tdd.point.UserPoint;
 
 @SpringBootTest
 public class PointIntegrationTest {
+	
+	private static final Logger log = LoggerFactory.getLogger(PointService.class);
 	
 	@Autowired
 	PointService pointService;
@@ -84,7 +86,9 @@ public class PointIntegrationTest {
 		long user1Id = 1L;
 		long expectedPoint = 250L;
 		long chargePoint = 150L;
-		
+		long historySize = 1L;
+		long initialHistorySize = pointService.history(user1Id).size();
+
 		/*
 		 * when
 		 * - 실제 동작이 이루어진다.
@@ -92,13 +96,17 @@ public class PointIntegrationTest {
 		 * - 검증 대상의 동작 하나만 기술한다.
 		 * */
 		long actualPoint = pointService.charge(user1Id, chargePoint).point();
-		
+		long actualHistorySize = pointService.history(user1Id).size();
+
 		/*
 		 * Then
 		 * - 최종적으로 테스트를 검증한다.
 		 * - 테스트 과정을 종합한다.
 		 * */
 		assertEquals(expectedPoint, actualPoint);
+		
+		//추가 테스트
+		assertEquals(historySize+initialHistorySize, actualHistorySize);
 
 	}
 	
@@ -142,6 +150,8 @@ public class PointIntegrationTest {
 		long user1Id = 1L;
 		long expectedPoint = 50L;
 		long usePoint = 50L;
+		int historySize = 1;
+		int initialHistorySize = pointService.history(user1Id).size();
 		
 		/*
 		 * when
@@ -150,13 +160,16 @@ public class PointIntegrationTest {
 		 * - 검증 대상의 동작 하나만 기술한다.
 		 * */
 		long actualPoint = pointService.use(user1Id, usePoint).point();
-		
+		int actualHistorySize = pointService.history(user1Id).size();
 		/*
 		 * Then
 		 * - 최종적으로 테스트를 검증한다.
 		 * - 테스트 과정을 종합한다.
 		 * */
 		assertEquals(expectedPoint, actualPoint);
+		
+		//추가 테스트
+		assertEquals(historySize+initialHistorySize, actualHistorySize);
 		
 	}
 	
@@ -216,4 +229,30 @@ public class PointIntegrationTest {
 		});
 	}
 	
+	@Test
+	@DisplayName("[내역조회API 동작 검증] user1 사용자의 포인트 충전/사용 내역을 조회 하는 동작에 대한 테스트")
+	void selectUserPointHistory1() throws Exception {
+		/*
+		 * given
+		 * - 테스트에 사용할 변수 및 입력값을 정의한다.
+		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
+		 * */
+		long userId = 1L;
+		long expectedSize = 0L;
+		
+		/*
+		 * when
+		 * - 실제 동작이 이루어진다.
+		 * - 동작에 따른 상태 변화를 기억하거나, 대조군으로 활용하기 위한 과정이다.
+		 * - 검증 대상의 동작 하나만 기술한다.
+		 * */
+		long actualSize = pointService.history(userId).size();
+		
+		/*
+		 * Then
+		 * - 최종적으로 테스트를 검증한다.
+		 * - 테스트 과정을 종합한다.
+		 * */
+		assertEquals(expectedSize, actualSize);
+	}
 }
