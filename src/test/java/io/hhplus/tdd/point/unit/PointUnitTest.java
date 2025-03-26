@@ -318,4 +318,111 @@ public class PointUnitTest {
 		 * */
 		assertEquals(expectedPoint, actualPoint);
 	}
+	
+	@Test
+	@DisplayName("[concurrentHashMap의 동기화 자료구조 특성을 이용한 동시성 검증] 5명의 user1 스레드가 5포인트씩 충전할때, 최종적으로 125포인트를 충전하는 동작에 대한 테스트")
+	void case3IsSynchronizedOfChargedUser1PointWhen5ThreadCalledChargingService() throws InterruptedException {
+		
+		/*
+		 * given
+		 * - 테스트에 사용할 변수 및 입력값을 정의한다.
+		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
+		 * */
+		long userId = 1L;
+		long expectedPoint = 125L;
+		long chargePoint = 5L;
+		
+		/*
+		 * when
+		 * - 실제 동작이 이루어진다.
+		 * - 동작에 따른 상태 변화를 기억하거나, 대조군으로 활용하기 위한 과정이다.
+		 * - 검증 대상의 동작 하나만 기술한다.
+		 * - 모든 멀티 커스텀 스레드의 동작 완료를 보장하기 위해 join을 활용한다.
+		 * */
+		//전체 실행시간 확인을 위함
+		long startTime = System.nanoTime();
+			
+		pointService.initPoint();
+		
+		Thread t1 = new Thread(()->{
+			log.info("첫번째 스레드 호출");
+			try {
+				pointService.syncCharge3(userId, chargePoint);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("첫번째 스레드 완료");
+		});
+		t1.start();
+		t1.join();
+		
+		Thread t2 = new Thread(()->{
+			log.info("두번째 스레드 호출");
+			try {
+				pointService.syncCharge3(userId, chargePoint);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("두번째 스레드 완료");
+		});
+		t2.start();
+		t2.join();
+		
+		Thread t3 = new Thread(()->{
+			log.info("세번째 스레드 호출");
+			try {
+				pointService.syncCharge3(userId, chargePoint);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("세번째 스레드 완료");
+		});
+		t3.start();
+		t3.join();
+		
+		Thread t4 = new Thread(()->{
+			log.info("네번째 스레드 호출");
+			try {
+				pointService.syncCharge3(userId, chargePoint);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("네번째 스레드 완료");
+		});
+		t4.start();
+		t4.join();
+		
+		Thread t5 = new Thread(()->{
+			log.info("다섯번째 스레드 호출");
+			try {
+				pointService.syncCharge3(userId, chargePoint);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("다섯번째 스레드 완료");
+		});
+		t5.start();
+		t5.join();
+		
+		//누적 금액을 확인하기 위해 pointService에서 확인 메소드를 구성하였습니다.
+		long actualPoint = pointService.getPointOfConcurrentHashMap(userId);
+		
+		//전체 실행시간 확인을 위함
+		long endTime = System.nanoTime();
+		
+		//메소드 실행시간
+		log.info("case 3 전체 실행 시간 : {}", String.valueOf((endTime-startTime)/10000L));
+				
+		/*
+		 * Then
+		 * - 최종적으로 테스트를 검증한다.
+		 * - 테스트 과정을 종합한다.
+		 * */
+		assertEquals(expectedPoint, actualPoint);
+	}
 }
