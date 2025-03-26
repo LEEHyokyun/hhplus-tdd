@@ -106,7 +106,7 @@ public class PointUnitTest {
 	}
 	
 	@Test
-	@DisplayName("[메소드를 synchronized동시성 검증] 5명의 user1 스레드가 5포인트씩 충전할때, 최종적으로 125포인트를 충전하는 동작에 대한 테스트")
+	@DisplayName("[메소드 synchronized(pointService 블록화를 통한 고유락) 동시성 검증] 5명의 user1 스레드가 5포인트씩 충전할때, 최종적으로 125포인트를 충전하는 동작에 대한 테스트")
 	void case1IsSynchronizedOfChargedUser1PointWhen5ThreadCalledChargingService() throws InterruptedException {
 		
 		/*
