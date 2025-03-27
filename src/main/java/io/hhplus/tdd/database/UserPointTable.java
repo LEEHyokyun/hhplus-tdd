@@ -14,7 +14,9 @@ import java.util.concurrent.TimeUnit;
 public class UserPointTable {
 
     private final Map<Long, UserPoint> table = new HashMap<>();
-
+    
+    private static UserPoint user1 = UserPoint.user1();
+    
     public UserPoint selectById(Long id) {
     	//user1에 대한 정보를 table db에 생성(최초 생성)
     	table.put(1L, UserPoint.user1());
@@ -30,7 +32,7 @@ public class UserPointTable {
         table.put(id, userPoint);
         return userPoint;
     }
-
+    
     private void throttle(long millis) {
         try {
             TimeUnit.MILLISECONDS.sleep((long) (Math.random() * millis));
