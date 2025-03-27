@@ -2,6 +2,13 @@ package io.hhplus.tdd.point.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +25,8 @@ import io.hhplus.tdd.point.UserPoint;
 public class PointUnitTest {
 	
 	private static final Logger log = LoggerFactory.getLogger(PointUnitTest.class);
+	
+	private static int MAX_THREAD = 3000;
 	
 	@Autowired
 	private PointService pointService;
@@ -115,8 +124,14 @@ public class PointUnitTest {
 		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
 		 * */
 		long userId = 1L;
-		long expectedPoint = 125L;
-		long chargePoint = 5L;
+		long expectedPoint = 3100L;
+		long chargePoint = 1L;
+		long expectedSuccessCount = 3000L;
+		
+		//동시성 테스트를 위한 executorService, atomic 변수 초기화
+		CountDownLatch doneSignal = new CountDownLatch(MAX_THREAD);
+	    ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREAD);
+	    AtomicInteger successCount = new AtomicInteger();
 		
 		/*
 		 * when
@@ -130,72 +145,26 @@ public class PointUnitTest {
 		
 		pointService.initPoint();
 		
-		Thread t1 = new Thread(()->{
-			log.info("첫번째 스레드 호출");
-			try {
-				pointService.syncCharge1(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("첫번째 스레드 완료");
-		});
-		t1.start();
-		t1.join();
+		for (int i = 0; i < MAX_THREAD; i++) {
+            executorService.execute(() -> {
+                try {
+                	//서비스 동작에 대한 확인
+                    successCount.getAndIncrement();
+                    pointService.syncCharge1(userId, chargePoint);
+                } catch(Exception e){
+                	
+                }finally {
+                	//Thread 실행 횟수 확인
+                    doneSignal.countDown();
+                }
+            });
+        }
 		
-		Thread t2 = new Thread(()->{
-			log.info("두번째 스레드 호출");
-			try {
-				pointService.syncCharge1(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("두번째 스레드 완료");
-		});
-		t2.start();
-		t2.join();
-		
-		Thread t3 = new Thread(()->{
-			log.info("세번째 스레드 호출");
-			try {
-				pointService.syncCharge1(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("세번째 스레드 완료");
-		});
-		t3.start();
-		t3.join();
-		
-		Thread t4 = new Thread(()->{
-			log.info("네번째 스레드 호출");
-			try {
-				pointService.syncCharge1(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("네번째 스레드 완료");
-		});
-		t4.start();
-		t4.join();
-		
-		Thread t5 = new Thread(()->{
-			log.info("다섯번째 스레드 호출");
-			try {
-				pointService.syncCharge1(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("다섯번째 스레드 완료");
-		});
-		t5.start();
-		t5.join();
-		
-		//누적 금액을 확인하기 위해 pointService에서 확인 메소드를 구성하였습니다.
+		//모든 스레드 동작을 완료할 때까지 대기
+        doneSignal.await();
+        
+        //동시성 테스트 종료
+        executorService.shutdown();
 		long actualPoint = pointService.getPoint();
 		
 		//전체 실행시간 확인을 위함
@@ -210,6 +179,7 @@ public class PointUnitTest {
 		 * - 테스트 과정을 종합한다.
 		 * */
 		assertEquals(expectedPoint, actualPoint);
+		assertEquals(expectedSuccessCount, successCount.longValue());
 	}
 	
 	@Test
@@ -222,8 +192,14 @@ public class PointUnitTest {
 		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
 		 * */
 		long userId = 1L;
-		long expectedPoint = 125L;
-		long chargePoint = 5L;
+		long expectedPoint = 3100L;
+		long chargePoint = 1L;
+		long expectedSuccessCount = 3000L;
+		
+		//동시성 테스트를 위한 executorService, atomic 변수 초기화
+		CountDownLatch doneSignal = new CountDownLatch(MAX_THREAD);
+	    ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREAD);
+	    AtomicInteger successCount = new AtomicInteger();
 		
 		/*
 		 * when
@@ -234,77 +210,31 @@ public class PointUnitTest {
 		 * */
 		//전체 실행시간 확인을 위함
 		long startTime = System.nanoTime();
-			
+	
 		pointService.initPoint();
 		
-		Thread t1 = new Thread(()->{
-			log.info("첫번째 스레드 호출");
-			try {
-				pointService.syncCharge2(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("첫번째 스레드 완료");
-		});
-		t1.start();
-		t1.join();
+		for (int i = 0; i < MAX_THREAD; i++) {
+            executorService.execute(() -> {
+                try {
+                	//서비스 동작에 대한 확인
+                    successCount.getAndIncrement();
+                    pointService.syncCharge2(userId, chargePoint);
+                } catch(Exception e){
+                	
+                }finally {
+                	//Thread 실행 횟수 확인
+                    doneSignal.countDown();
+                }
+            });
+        }
 		
-		Thread t2 = new Thread(()->{
-			log.info("두번째 스레드 호출");
-			try {
-				pointService.syncCharge2(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("두번째 스레드 완료");
-		});
-		t2.start();
-		t2.join();
-		
-		Thread t3 = new Thread(()->{
-			log.info("세번째 스레드 호출");
-			try {
-				pointService.syncCharge2(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("세번째 스레드 완료");
-		});
-		t3.start();
-		t3.join();
-		
-		Thread t4 = new Thread(()->{
-			log.info("네번째 스레드 호출");
-			try {
-				pointService.syncCharge2(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("네번째 스레드 완료");
-		});
-		t4.start();
-		t4.join();
-		
-		Thread t5 = new Thread(()->{
-			log.info("다섯번째 스레드 호출");
-			try {
-				pointService.syncCharge2(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("다섯번째 스레드 완료");
-		});
-		t5.start();
-		t5.join();
-		
-		//누적 금액을 확인하기 위해 pointService에서 확인 메소드를 구성하였습니다.
+		//모든 스레드 동작을 완료할 때까지 대기
+        doneSignal.await();
+        
+        //동시성 테스트 종료
+        executorService.shutdown();
 		long actualPoint = pointService.getPoint();
-		
+        
 		//전체 실행시간 확인을 위함
 		long endTime = System.nanoTime();
 		
@@ -317,6 +247,7 @@ public class PointUnitTest {
 		 * - 테스트 과정을 종합한다.
 		 * */
 		assertEquals(expectedPoint, actualPoint);
+		assertEquals(expectedSuccessCount, successCount.longValue());
 	}
 	
 	@Test
@@ -329,9 +260,15 @@ public class PointUnitTest {
 		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
 		 * */
 		long userId = 1L;
-		long expectedPoint = 125L;
-		long chargePoint = 5L;
+		long expectedPoint = 3100L;
+		long chargePoint = 1L;
+		long expectedSuccessCount = 3000L;
 		
+		//동시성 테스트를 위한 executorService, atomic 변수 초기화
+		CountDownLatch doneSignal = new CountDownLatch(MAX_THREAD);
+	    ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREAD);
+	    AtomicInteger successCount = new AtomicInteger();
+			    
 		/*
 		 * when
 		 * - 실제 동작이 이루어진다.
@@ -341,75 +278,29 @@ public class PointUnitTest {
 		 * */
 		//전체 실행시간 확인을 위함
 		long startTime = System.nanoTime();
-			
+
 		pointService.initPoint();
 		
-		Thread t1 = new Thread(()->{
-			log.info("첫번째 스레드 호출");
-			try {
-				pointService.syncCharge3(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("첫번째 스레드 완료");
-		});
-		t1.start();
-		t1.join();
+		for (int i = 0; i < MAX_THREAD; i++) {
+            executorService.execute(() -> {
+                try {
+                	//서비스 동작에 대한 확인
+                    successCount.getAndIncrement();
+                   pointService.syncCharge3(userId, chargePoint);
+                } catch(Exception e){
+                	
+                }finally {
+                	//Thread 실행 횟수 확인
+                    doneSignal.countDown();
+                }
+            });
+        }
 		
-		Thread t2 = new Thread(()->{
-			log.info("두번째 스레드 호출");
-			try {
-				pointService.syncCharge3(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("두번째 스레드 완료");
-		});
-		t2.start();
-		t2.join();
-		
-		Thread t3 = new Thread(()->{
-			log.info("세번째 스레드 호출");
-			try {
-				pointService.syncCharge3(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("세번째 스레드 완료");
-		});
-		t3.start();
-		t3.join();
-		
-		Thread t4 = new Thread(()->{
-			log.info("네번째 스레드 호출");
-			try {
-				pointService.syncCharge3(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("네번째 스레드 완료");
-		});
-		t4.start();
-		t4.join();
-		
-		Thread t5 = new Thread(()->{
-			log.info("다섯번째 스레드 호출");
-			try {
-				pointService.syncCharge3(userId, chargePoint);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			log.info("다섯번째 스레드 완료");
-		});
-		t5.start();
-		t5.join();
-		
-		//누적 금액을 확인하기 위해 pointService에서 확인 메소드를 구성하였습니다.
+		//모든 스레드 동작을 완료할 때까지 대기
+        doneSignal.await();
+        
+        //동시성 테스트 종료
+        executorService.shutdown();
 		long actualPoint = pointService.getPointOfConcurrentHashMap(userId);
 		
 		//전체 실행시간 확인을 위함
@@ -424,5 +315,74 @@ public class PointUnitTest {
 		 * - 테스트 과정을 종합한다.
 		 * */
 		assertEquals(expectedPoint, actualPoint);
+		assertEquals(expectedSuccessCount, successCount.longValue());
+	}
+	
+	@Test
+	@DisplayName("[ReentrantLock을 활용하여 스레드 락을 적용한 동시성 검증	] 3000명의 스레드가 1포인트씩 충전할때, 최종적으로 3100포인트를 충전하는 동작에 대한 테스트")
+	void case4IsSynchronizedOfChargedUser1PointWhen5ThreadCalledChargingService() throws InterruptedException, ExecutionException {
+		
+		/*
+		 * given
+		 * - 테스트에 사용할 변수 및 입력값을 정의한다.
+		 * - 동작을 확인하기 위한 Mokito 정의도 포함(Database(Repository)의 객체를 Mokito화하여 사용)
+		 * */
+		long userId = 1L;
+		long expectedPoint = 3100L;
+		long chargePoint = 1L;
+		long expectedSuccessCount = 3000L;
+		
+		//동시성 테스트를 위한 executorService, atomic 변수 초기화
+		CountDownLatch doneSignal = new CountDownLatch(MAX_THREAD);
+	    ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREAD);
+	    AtomicInteger successCount = new AtomicInteger();
+	    
+		/*
+		 * when
+		 * - 실제 동작이 이루어진다.
+		 * - 동작에 따른 상태 변화를 기억하거나, 대조군으로 활용하기 위한 과정이다.
+		 * - 검증 대상의 동작 하나만 기술한다.
+		 * - executorService를 통해 멀티 스레드 환경 구성
+		 * */
+		//전체 실행시간 확인을 위함
+		long startTime = System.nanoTime();
+		
+		pointService.initPoint();
+		
+		for (int i = 0; i < MAX_THREAD; i++) {
+            executorService.execute(() -> {
+                try {
+                	//서비스 동작에 대한 확인
+                    successCount.getAndIncrement();
+                    pointService.syncCharge4(userId, chargePoint);
+                } catch(Exception e){
+                	log.info(e.getMessage());
+                }finally {
+                	//Thread 실행 횟수 확인
+                    doneSignal.countDown();
+                }
+            });
+        }
+		
+		//모든 스레드 동작을 완료할 때까지 대기
+        doneSignal.await();
+        
+        //동시성 테스트 종료
+        executorService.shutdown();
+		long actualPoint = pointService.getPoint();
+        
+		//전체 실행시간 확인을 위함
+		long endTime = System.nanoTime();
+		
+		//메소드 실행시간
+		log.info("case 4 전체 실행 시간 : {}", String.valueOf((endTime-startTime)/10000L));
+				
+		/*
+		 * Then
+		 * - 최종적으로 테스트를 검증한다.
+		 * - 테스트 과정을 종합한다.
+		 * */
+		assertEquals(expectedPoint, actualPoint);
+		assertEquals(expectedSuccessCount, successCount.longValue());
 	}
 }
